@@ -37,7 +37,23 @@ const Canvas = () => {
   
 
   //// recuperation du location
- 
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      setStatus('Geolocation is not supported by your browser');
+    } else {
+      setStatus('Locating...');
+      navigator.geolocation.getCurrentPosition((position) => {
+        setStatus(null);
+        setLat(position.coords.latitude);
+        setLng(position.coords.longitude);
+      }, () => {
+        setStatus('Unable to retrieve your location');
+      });
+    }
+
+    console.log(lat,lng)
+  }
+
   const videoElement = useMemo(() => {
     const element = new window.Image();
     element.width = 650;
@@ -194,7 +210,52 @@ const Canvas = () => {
   }
   
  //envois les donnes 
-  
+ const sendData = (e) =>{
+   
+  const url = 'http://localhost:3000/files';
+  let annotation = document.getElementById("annotation").value;
+  getLocation();
+  if(lat && lng){
+    let pointsObjArray = [];
+ 
+    points.forEach(function(item){
+      pointsObjArray.push({x:item[0],y:item[1]});
+    });
+
+    console.log(JSON.stringify(pointsObjArray))
+      e.preventDefault();
+    
+    
+      Axios.post(url,{
+      
+          file_url:"url",
+          width: size.width,
+          height: size.height,
+          date_captured: new Date(),
+          gps_location:{	
+            latitude: lat,
+            longitude: lng
+        },
+          objects:
+            {
+                  class: annotation,	
+                  polygon: pointsObjArray
+            }
+      
+         
+      })
+      .then(res=>{
+       // upload();
+        console.log(res.data);
+        reset();
+        document.getElementById("annotation").value="";
+        alert("data sent successfully");
+      })
+  }
+  else
+  alert("You did not get the location , please try again")
+
+}
 //upload image
 
 const upload= (e) =>{
