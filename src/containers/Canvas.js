@@ -141,6 +141,54 @@ const Canvas = () => {
   
   //acces ou camera
 
+  let video = null
+
+  const getVideo = () => {
+    navigator.mediaDevices
+      .getUserMedia({
+        video: true
+      })
+      .then((stream) => {
+        let video = videoRef.current;
+        video.srcObject = stream;
+        video.play();
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
+  const takePicture = () => {
+    const width = 400
+    const height = width / (16 / 9)
+    
+    video = videoRef.current
+
+    let photo = photoRef.current
+
+    photo.width = width
+
+    photo.height = height
+
+    let ctx = document.getElementById("picture").getContext('2d')
+
+   ctx.drawImage(video, 0, 0, width, height)
+    
+    
+  }
+
+  const clearImage = () => {
+    let photo = photoRef.current
+
+    let ctx = document.getElementById("picture").getContext('2d')
+
+    ctx.clearRect(0,0,photo.width,photo.height)
+  }
+
+  useEffect(() => {
+    getVideo();
+  }, [videoRef]);
+
   const getFileName = (e)=>{
     setFilename(new Date().getUTCMilliseconds())
   }
@@ -149,7 +197,18 @@ const Canvas = () => {
   
 //upload image
 
- 
+const upload= (e) =>{
+  const url = 'http://localhost:3000/files/webupload';
+  var dataURL =  document.getElementById("picture").toDataURL();
+
+  console.log("data url",dataURL)
+  Axios.post(url,{
+    image:dataURL
+  }) .then(res=>{
+    console.log(res.data);
+  })
+}
+
   return (
     <div class="konva-elements">
     <video ref={videoRef} className="video" ></video>
@@ -177,8 +236,33 @@ const Canvas = () => {
       />
     </Layer>
   </Stage>
+  <div class="btns mt-4">
+    <div class="row mb-2">
+          <div class="col-12">
+            <input type="text" class="form-control" placeholder="Annotation" id="annotation"/>
+          </div>
+      </div>
+      <div class="row mb-2">
+          <div class="col-4">
+             <button class="btn btn-primary w-100" onClick={takePicture}><i class="fas fa-camera"></i></button>
+          </div>
+          <div class="col-4">
+              <button class="btn btn-primary w-100" onClick={undo}><i class="fas fa-undo"></i></button>
+          </div>
+          <div class="col-4">
+              <button class="btn btn-primary w-100" onClick={reset}><i class="fas fa-trash"></i></button>
+          </div>
+      </div>
+      <div class="row">
+          <div class="col-6">
+              <button class="btn btn-primary w-100"><i class="fas fa-save"></i></button>
+          </div>
+          <div class="col-6">
+              <button class="btn btn-primary w-100" onClick={sendData}><i class="fas fa-paper-plane"></i></button>
+          </div>
+      </div>
+  </div>
 
-  //btns
 
     
     </div>
